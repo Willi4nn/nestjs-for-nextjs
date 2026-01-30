@@ -1,0 +1,36 @@
+@baseUrl = http://localhost:3000
+
+### Auth Login - Sucesso
+# @name auth-login-success
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "usuario@email.com",
+  "password": "senhaSegura123",
+  "rememberMe": true
+}
+
+### Auth Login - Email inválido
+# @name auth-login-invalid-email
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "email-invalido",
+  "password": "senhaSegura123"
+}
+
+### Auth Login - Senha muito curta
+# @name auth-login-short-password
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "usuario@email.com",
+  "password": "123"
+}
+
+### Get User by ID - Sucesso
+# @name get-user-by-id-success
+GET {{baseUrl}}/user/123
