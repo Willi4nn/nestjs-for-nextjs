@@ -1,36 +1,153 @@
+###############################################################################
+# REST CLIENT - NestJS API Tests
+# Execute as requisições em ordem para testar todo o fluxo da aplicação
+###############################################################################
+
+# VARIABLES ###################################################################
+
 @baseUrl = http://localhost:3000
 
-### Auth Login - Sucesso
-# @name auth-login-success
+# Dados de teste do usuário
+@userName = João Silva
+@userEmail = joao.silva@email.com
+@userPassword = senha123
+@userNewPassword = novaSenha123
+
+# Variáveis dinâmicas (capturadas das respostas)
+@jwtToken = {{login.response.body.accessToken}}
+@postId = {{createPost.response.body.id}}
+
+###############################################################################
+# USER - Gerenciamento de Usuários
+###############################################################################
+
+### 1. Criar novo usuário
+# @name createUser
+POST {{baseUrl}}/user
+Content-Type: application/json
+
+{
+  "name": "{{userName}}",
+  "email": "{{userEmail}}",
+  "password": "{{userPassword}}"
+}
+
+###############################################################################
+# AUTH - Autenticação
+###############################################################################
+
+### 2. Fazer login e obter token JWT
+# @name login
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "usuario@email.com",
-  "password": "senhaSegura123",
-  "rememberMe": true
+  "email": "{{userEmail}}",
+  "password": "{{userPassword}}"
 }
 
-### Auth Login - Email inválido
-# @name auth-login-invalid-email
-POST {{baseUrl}}/auth/login
+###############################################################################
+# USER - Operações autenticadas
+###############################################################################
+
+### 3. Buscar dados do usuário autenticado
+GET {{baseUrl}}/user/me
+Authorization: Bearer {{jwtToken}}
+
+### 4. Atualizar dados do usuário
+PATCH {{baseUrl}}/user/me
 Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
 
 {
-  "email": "email-invalido",
-  "password": "senhaSegura123"
+  "name": "{{userName}} Atualizado",
+  "email": "{{userEmail}}"
 }
 
-### Auth Login - Senha muito curta
-# @name auth-login-short-password
-POST {{baseUrl}}/auth/login
+### 5. Atualizar senha do usuário
+PATCH {{baseUrl}}/user/me/password
 Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
 
 {
-  "email": "usuario@email.com",
-  "password": "123"
+  "currentPassword": "{{userPassword}}",
+  "newPassword": "{{userNewPassword}}"
 }
 
-### Get User by ID - Sucesso
-# @name get-user-by-id-success
-GET {{baseUrl}}/user/123
+### 6. Deletar usuário (use com cuidado!)
+DELETE {{baseUrl}}/user/me
+Authorization: Bearer {{jwtToken}}
+
+###############################################################################
+# POST - Gerenciamento de Posts
+###############################################################################
+
+### 7. Criar novo post
+# @name createPost
+POST {{baseUrl}}/post
+Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
+
+{
+  "title": "Meu Primeiro Post de Exemplo",
+  "excerpt": "Este é um resumo do meu primeiro post criado via API REST",
+  "content": "Conteúdo completo do post com informações detalhadas sobre o assunto que estou abordando. Este texto precisa ser mais longo para passar na validação.",
+  "coverImageUrl": "https://example.com/images/cover.jpg"
+}
+
+### 8. Listar todos os posts
+GET {{baseUrl}}/post
+
+### 9. Buscar post específico por ID
+GET {{baseUrl}}/post/{{postId}}
+
+### 10. Atualizar post existente
+PATCH {{baseUrl}}/post/{{postId}}
+Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
+
+{
+  "title": "Post Atualizado - Título Modificado",
+  "excerpt": "Resumo atualizado com novas informações relevantes sobre o tema",
+  "content": "Conteúdo totalmente atualizado com mais detalhes e informações relevantes para os leitores.",
+  "published": true
+}
+
+### 11. Deletar post
+DELETE {{baseUrl}}/post/{{postId}}
+Authorization: Bearer {{jwtToken}}
+
+###############################################################################
+# EXEMPLOS ADICIONAIS
+###############################################################################
+
+### Criar post sem imagem de capa
+POST {{baseUrl}}/post
+Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
+
+{
+  "title": "Post Sem Imagem de Capa - Exemplo Simples",
+  "excerpt": "Este post foi criado sem uma imagem de capa definida no momento",
+  "content": "Conteúdo do post sem imagem. Ainda assim, o post é válido e pode ser publicado normalmente."
+}
+
+### Atualizar apenas o status de publicação
+PATCH {{baseUrl}}/post/{{postId}}
+Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
+
+{
+  "published": false
+}
+
+###############################################################################
+# OBSERVAÇÕES
+###############################################################################
+# 1. Execute "1. Criar novo usuário" primeiro
+# 2. Depois execute "2. Fazer login" para obter o token JWT
+# 3. O token será automaticamente usado nas requisições subsequentes
+# 4. O ID do post criado será capturado automaticamente para uso posterior
+# 5. Todos os campos de texto têm validações de tamanho mínimo/máximo
+# 6. coverImageUrl é opcional ao criar/atualizar posts
+###############################################################################
