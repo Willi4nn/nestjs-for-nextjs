@@ -2,12 +2,12 @@
 # REST CLIENT - API Tests (NestJS)
 ###############################################################################
 
-# @baseUrl = http://localhost:3000
-@baseUrl = http://localhost:3000
+# @baseUrl = http://localhost:3001
+@baseUrl = http://localhost:3001
 
 # Variáveis de Teste (Configuração Inicial)
-@userName = Luiz João
-@userEmail = joao@email.com
+@userName = test
+@userEmail = test@email.com
 @userPassword = senha123
 @userNewPassword = novaSenha123
 

@@ -1,5 +1,5 @@
 import { InternalServerErrorException, Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { CommonModule } from 'src/common/common.module';
 import { UserModule } from 'src/user/user.module';
 import { AuthController } from './auth.controller';
@@ -11,7 +11,7 @@ import { JwtStrategy } from './jwt.strategy';
     UserModule,
     CommonModule,
     JwtModule.registerAsync({
-      useFactory: () => {
+      useFactory: (): JwtModuleOptions => {
         const secretKey = process.env.JWT_SECRET || 'defaultSecretKey';
 
         if (!secretKey) {
@@ -20,20 +20,12 @@ import { JwtStrategy } from './jwt.strategy';
           );
         }
 
-        const expiresIn = process.env.JWT_EXPIRATION
-          ? parseInt(process.env.JWT_EXPIRATION, 10)
-          : 3600;
-
-        if (isNaN(expiresIn)) {
-          throw new InternalServerErrorException(
-            'JWT expiration time must be a valid number.'
-          );
-        }
+        const expiresIn = process.env.JWT_EXPIRATION || '1d';
 
         return {
           secret: secretKey,
           signOptions: { expiresIn },
-        };
+        } as JwtModuleOptions;
       },
     }),
   ],
