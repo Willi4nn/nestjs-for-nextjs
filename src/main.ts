@@ -1,6 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import helmet from 'node_modules/helmet/index.mjs';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { parseCorsWhitelist } from './common/utils/parse-cors-whitelist';
 
@@ -35,7 +35,7 @@ async function bootstrap() {
     })
   );
 
-  const port = process.env.APP_PORT ?? 3001;
+  const port = process.env.PORT || process.env.APP_PORT || 3001;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);
 }
