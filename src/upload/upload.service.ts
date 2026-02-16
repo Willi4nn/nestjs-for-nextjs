@@ -1,49 +1,62 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { fileTypeFromBuffer } from 'file-type';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
-import { GenerateRandomSuffix } from 'src/common/utils/generate-random-suffix';
 
 @Injectable()
 export class UploadService {
+  private readonly logger = new Logger(UploadService.name);
+
+  constructor() {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+  }
+
   async handleUpload(file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('Nenhum arquivo enviado.');
-    }
+    if (!file) throw new BadRequestException('No files sent.');
 
     const maxFileSize = 900 * 1024;
-
-    if (file.size > maxFileSize) {
-      throw new BadRequestException('Arquivo muito grande');
-    }
+    if (file.size > maxFileSize)
+      throw new BadRequestException('File size exceeds the 900KB limit.');
 
     const fileType = await fileTypeFromBuffer(file.buffer);
-
     if (
       !fileType ||
-      !['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(
-        fileType.mime
-      )
+      !['image/png', 'image/jpeg', 'image/webp'].includes(fileType.mime)
     ) {
-      throw new BadRequestException('Arquivo inválido ou tipo não permitido.');
+      throw new BadRequestException(
+        'Only PNG, JPEG, and WEBP image formats are allowed.'
+      );
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    const uploadPath = resolve(__dirname, '..', '..', 'uploads', today);
+    try {
+      const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'blog-posts' },
+          (error, result) => {
+            if (error) return reject(new Error(error.message));
 
-    if (!existsSync(uploadPath)) {
-      mkdirSync(uploadPath, { recursive: true });
+            if (!result)
+              return reject(
+                new Error('No response from Cloudinary after upload.')
+              );
+
+            resolve(result);
+          }
+        );
+        stream.end(file.buffer);
+      });
+
+      return {
+        url: result.secure_url,
+      };
+    } catch (err) {
+      this.logger.error('Upload to Cloudinary failed:', err);
+      throw new BadRequestException(
+        'Failed to upload image. Please try again later.'
+      );
     }
-
-    const uniqueSuffix = `${Date.now()}-${GenerateRandomSuffix()}`;
-    const fileExtension = fileType.ext;
-    const fileName = `${uniqueSuffix}.${fileExtension}`;
-    const fileFullPath = resolve(uploadPath, fileName);
-
-    writeFileSync(fileFullPath, file.buffer);
-
-    return {
-      url: `/uploads/${today}/${fileName}`,
-    };
   }
 }

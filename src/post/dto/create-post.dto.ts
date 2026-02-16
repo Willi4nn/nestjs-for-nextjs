@@ -8,14 +8,14 @@ import {
 
 export class CreatePostDto {
   @IsString({ message: 'Title needs to be a string' })
-  @Length(10, 150, {
-    message: 'Title needs to be between 10 and 150 characters',
+  @Length(3, 150, {
+    message: 'Title needs to be between 3 and 150 characters',
   })
   title: string;
 
   @IsString({ message: 'Excerpt needs to be a string' })
-  @Length(10, 200, {
-    message: 'Excerpt needs to be between 10 and 200 characters',
+  @Length(3, 200, {
+    message: 'Excerpt needs to be between 3 and 200 characters',
   })
   excerpt: string;
 
