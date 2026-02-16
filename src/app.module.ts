@@ -32,13 +32,14 @@ dotenv.config();
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST ?? 'localhost',
-      port: parseInt(process.env.DB_PORT ?? '5435', 10),
-      username: process.env.DB_USERNAME ?? 'nest_user',
-      password: process.env.DB_PASSWORD ?? 'nest_password',
-      database: process.env.DB_DATABASE ?? 'nest_db',
-      synchronize: process.env.DB_SYNCHRONIZE === '1',
-      autoLoadEntities: process.env.DB_AUTO_LOAD_ENTITIES === '1',
+      url: process.env.DATABASE_URL,
+      synchronize: true, // (true só para dev)
+      autoLoadEntities: true,
+      ssl: { rejectUnauthorized: false },
+      logging: process.env.NODE_ENV !== 'production',
+      extra: {
+        max: 10,
+      },
     }),
     UploadModule,
   ],
